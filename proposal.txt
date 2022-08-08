@@ -1,0 +1,24 @@
+Project Description:
+Bloons Tower Defense
+
+The player must place towers to defend from incoming bloons
+win by surviving x number of rounds
+
+Structural Plan:
+Bloons class
+Towers class
+the classes have their own properties (stats, sprites etc)
+separate each mode into files
+sprites and images will be in their own folders
+
+Algorithmic Plan:
+darts will start from tower position and move toward bloon location 
+draw rectangle on the midpoints between tower and bloon
+
+to check bloon and dart collision: use distance formula
+
+
+
+
+Version Control Plan:
+GitHub
