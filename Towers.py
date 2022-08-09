@@ -10,6 +10,7 @@ class Towers:
         self.pos=pos
         # * 0 = hovering, 1 = placed
         # self.state=0
+        self.rotation
         
     # * sets the stats of towers in a dict
     def setType(self,type):
@@ -19,11 +20,25 @@ class Towers:
         
     # TODO make some function to place towers (on mousePressed) and to hover towers, if holding a tower, make it transparent
     # TODO add hovering later
-    
+
+
+    # * turn towards first bloon by rotating
+    def turn(self,targetList):
+        target=targetList[0]
+        trow,tcol=target.pos
+        row,col=self.pos
+        
+        
+    # * fire projectile in a direction
     def fire(self,target):
         return Projectile(self.data['damage'],self.pos,target,3,25)
         
+    def update(self):
+        pass
+    
+    def redraw(self, canvas):
         
+        canvas.create_oval()
     
 
 # TODO can move this somewhere else so it can work with both classes

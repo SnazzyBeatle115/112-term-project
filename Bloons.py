@@ -1,3 +1,5 @@
+from gameMode import getCellBounds,parseDataString
+
 class Bloons:
     # * direction priority
     # directions=['e','s','n','w']
@@ -6,10 +8,10 @@ class Bloons:
     # * spd, color
     bloonsData=["spd,color","1,red","1.4,blue"]
     
-    def __init__(self,pos,type=1,dir=(1,0)):
+    def __init__(self,app,pos,type=1,dir=(1,0)):
         self.type=type
         self.setType(type)
-        
+        self.app=app
         # self.dir=Bloons.directions[dir]
         self.dir=dir
         self.pos=pos
@@ -38,10 +40,12 @@ class Bloons:
         x,y=other.pos
         if x0<x<x1 and y0<y<y1:
             self.pop(other.damage)
+
             
     
     # * go forward, if no path, try another direction, returns True if at 'e'
-    def move(self,board):
+    def move(self):
+        board=self.app.board
         row,col=self.pos
         dRow,dCol=self.dir
         nRow,nCol=row+dRow,col+dCol
@@ -53,7 +57,25 @@ class Bloons:
                     break
         self.pos=nRow,nCol
         return board[nRow][nCol]=="e"
+    
+    # * draws the bloon
+    def redraw(self, canvas):
+        row,col=self.pos
+        app=self.app
+        x0,y0,x1,y1=getCellBounds(app, row, col)
+        x=(x0+x1)/2
+        y=(y0+y1)/2
+        canvas.create_oval(x-self.r,y-self.r,x+self.r,y+self.r,fill=self.data['color'])
             
+    def update(self):
+        print(self.app.time,(self.data["spd"]*1000))
+        if self.app.time%(self.data["spd"]*1000)==0:
+            return self.move()
+        # TODO implement projectile collision
+        # return self.checkCollision()
+        
+        
+        
 def isLegal(pos,board):
     row,col=pos
     return 0<=row<len(board) and 0<=col<len(board[0]) and (board[row][col]=="p" or board[row][col]=="e")
@@ -61,16 +83,6 @@ def isLegal(pos,board):
     
         
 
-# TODO can move this somewhere else so it can work with both classes
-def parseDataString(data,idx):
-    d={}
-    splitData=data[idx].split(',')
-    for i in range(len(splitData)):
-        stat=splitData[i]
-        if stat[0].isdigit():
-            stat=eval(stat)
-        d[data[0].split(',')[i]]=stat
-    return d
             
             
 # b = Bloons((0,0),2)

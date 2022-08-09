@@ -35,3 +35,14 @@ def findMidpoints(start,end,midpoints):
 # for i in range(4):
 #     x.move()
 #     print(x.pos)
+
+
+
+
+# def abc(a):
+#     yield a
+#     yield a*2
+
+# x=abc(1)
+# print(next(x))
+# print(next(x))
