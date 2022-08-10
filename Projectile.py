@@ -1,13 +1,14 @@
 class Projectile:
     
-    def __init__(self, dmg, start, end, speed, size):
+    def __init__(self, app, dmg, start, end, speed, size):
+        self.app=app
         self.damage=dmg
         self.start=start
         self.end=end
         self.speed=speed
         self.size=size
         self.pos=start
-        self.path=findMidpoints(start, end, speed)
+        self.path=findMidpoints(start, end, 5)
     
         
     def move(self):
@@ -16,7 +17,21 @@ class Projectile:
         self.pos=self.path[0]
         self.path.pop(0)
 
-        
+    def update(self):
+        if self.app.time%(self.speed*50)==0: 
+            self.move()
+            # print("projectile moving")
+            # print(self.pos)
+        x,y=self.pos
+        # print(self.pos)
+        if 0>x>self.app.width or 0>y>self.app.height or self.app.inRound==False:
+            return True
+            # TODO or collided
+
+    def redraw(self, canvas):
+        x,y=self.pos
+        canvas.create_rectangle(x-self.size,y-self.size,x+self.size,y+self.size,fill="black")
+    
 def findMidpoints(start,end,midpoints):
     res=[]
     for i in range(1,midpoints+2):
@@ -27,6 +42,12 @@ def findMidpoints(start,end,midpoints):
         res.append((x,y))
     return res
    
+   
+   
+# x=(Projectile(1,1,(1,2),
+#                           (1,2),3,25))
+# print(x.speed)
+
 # print(findMidpoints((0,0),(10,10),2))
 
 # x=Projectile(1,(0,0),(10,10),3,1)
@@ -46,3 +67,6 @@ def findMidpoints(start,end,midpoints):
 # x=abc(1)
 # print(next(x))
 # print(next(x))
+
+# if not None:
+#     print(x)

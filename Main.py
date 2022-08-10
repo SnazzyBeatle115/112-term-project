@@ -24,7 +24,7 @@ def appStarted(app):
     app.objects=[]
     app.bloonsList=[]
     app.towersList=[]
-    app.projectilesList=[]
+    # app.projectilesList=[]
     
 
 # * returns a board (for now hardcoded)
