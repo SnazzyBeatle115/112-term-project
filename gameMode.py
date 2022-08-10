@@ -64,13 +64,33 @@ from Projectile import *
 
 def gameMode_keyPressed(app, event):
     print(event.key)
-    if event.key == 'b':
-        print("place monkey")
+    # if event.key == 'b':
+    #     print("place monkey")
     if event.key=='Space':
         print("populating")
         populateBloons(app)
         app.inRound=True
-        app.objects=app.bloonsList+app.towersList+app.projectilesList
+    if event.key=='p':
+        app.objects.append()
+    if event.key=="Escape":
+        app.mode="pausedMode"
+    # if event.key=='r':
+        # appStarted(app)
+        # restart round
+        
+        
+        
+    # ! debugging
+    if event.key=='x':
+        app.bloonsList.append(Bloons(app,(1,2),1))
+    if event.key=='k':
+        for i in app.objects:
+            if isinstance(i,Towers):
+                i.changeTargeting('closest')
+    if event.key=='l':
+        for i in app.objects:
+            if isinstance(i,Towers):
+                i.changeTargeting('first')
 
 # * will if towers can/cant be placed at mouse location
 def gameMode_mouseMoved(app, event):
@@ -78,38 +98,76 @@ def gameMode_mouseMoved(app, event):
 
 # * click to place a tower
 def gameMode_mousePressed(app, event):
-    row,col = getCell(app, event.x, event,y)
+    print(event.x,event.y)
+    row,col = getCell(app, event.x, event.y)
     placeTower(app, row, col)
 
+# * places tower in cell
 def placeTower(app, row, col):
-    pass
+    tower = Towers(app,(row,col),1)
+    isLegal = isTowerLegal(app,row,col)
+    if isLegal==True: 
+        app.objects.append(tower)
+        print("placed")
+    elif isLegal:
+        app.objects.remove(isLegal)
+        print("removed")
+    
+# * returns legality of tower
+def isTowerLegal(app, row, col):
+    board=app.board
+    if board[row][col]!='g':
+        return False
+    
+    for i in app.objects:
+        if isinstance(i,Towers) and i.pos==(row,col):
+            return i
+    return True
 
 def gameMode_timerFired(app):
     app.time+=app.timerDelay
+    # app.objects=app.projectilesList+app.towersList+app.bloonsList
     if app.bloonsList==[]:
         app.inRound=False
         # print("not in round")
+    # if not typeExists(app, Bloons):
+    #     app.inRound=False
     
+    # print(app.bloonsList)
     
     if app.inRound:
         res=[]
+        for bloon in app.bloonsList:
+            if not bloon.update():
+                # print("moved")
+                res.append(bloon)
+        app.bloonsList=res
         
-        for obj in app.objects:
-            x=obj.update()
-            y=obj.pos
-            # print(x,y)
-            if not x:
-                res.append(obj)
-                # print("adding")
-                
-        app.objects=res
-        
+    res=[]
+    for obj in app.objects:
+        # x=obj.update()
+        # y=obj.pos
+        # print(x,y)
+        if not obj.update():
+            res.append(obj)
+            # print("adding")
+            
+    app.objects=res
+
+def typeExists(app, type):
+    for i in app.objects:
+        if isinstance(i, type):
+            return True
+    return False
     
 # * fills bloon list
+# TODO stagger spawns
 def populateBloons(app):
     app.round=-9
     for i in range(app.round+10):
         app.bloonsList.append(Bloons(app,(0,0),1))
+        # app.objects.append(Bloons(app,(0,0),1))
+        
 
 
 
@@ -134,7 +192,8 @@ def drawBoard(app, canvas):
             
     
 def drawObjects(app, canvas):
-    for obj in app.objects:
+    objects=app.objects+app.bloonsList
+    for obj in objects:
         obj.redraw(canvas)
 
 def drawHealth(app, canvas):
