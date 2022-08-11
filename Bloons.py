@@ -1,5 +1,6 @@
-from gameMode import getCellBounds,parseDataString
+from gameMode import getCellBounds,parseDataString,getCenter
 from Projectile import *
+import math
 
 class Bloons:
     # * direction priority
@@ -32,7 +33,7 @@ class Bloons:
         self.type-=dmg
         if self.type<=0:
             # * play pop noise
-            return
+            return True
         self.setType(self.type)
         
     # * takes in a projectile and checks collision (for now just check if in same box)
@@ -42,8 +43,18 @@ class Bloons:
             return
         (x0, y0, x1, y1)=getCellBounds(self.app,row,col)
         x,y=other.pos
-        if x0<x<x1 and y0<y<y1:
-            self.pop(other.damage)
+        # if x0<x<x1 and y0<y<y1:
+        if math.dist((x,y),self.pos)<self.r:
+            return self.pop(other.damage)
+            
+    def checkAllProjectiles(self):
+        app=self.app
+        for i in app.objects:
+            if isinstance(i, Projectile):
+                if self.checkCollision(i):
+                    print("collided")
+                    return True
+        return False
 
             
     
@@ -78,12 +89,9 @@ class Bloons:
     
     # * sets the absPos of bloon
     def setAbsPos(self):
-        app=self.app
         row,col=self.pos
-        x0,y0,x1,y1=getCellBounds(app, row, col)
-        x=(x0+x1)/2
-        y=(y0+y1)/2
-        self.absPos=x,y
+        self.absPos=getCenter(self.app,row,col)
+        return self.absPos
     
     # * draws the bloon
     def redraw(self, canvas):
@@ -93,11 +101,12 @@ class Bloons:
         canvas.create_oval(x-self.r,y-self.r,x+self.r,y+self.r,fill=self.data['color'])
             
     def update(self):
+        self.setAbsPos()
         # print(self.app.time,(self.data["spd"]*1000))
         if self.app.time%(self.data["spd"]*500)==0:
             return self.move()
         # TODO implement projectile collision
-        # return self.checkCollision()
+        return self.checkAllProjectiles()
         
         
         

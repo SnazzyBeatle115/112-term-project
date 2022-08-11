@@ -1,7 +1,7 @@
 ###########
 # Game Mode
 ###########
-
+# from Main import appStarted
 
 
 
@@ -53,8 +53,12 @@ def getCellBounds(app, row, col):
     y1 = app.margin + (row+1) * cellHeight
     return (x0, y0, x1, y1)
 
-
-
+# * gets the coords of center of cell
+def getCenter(app,row,col):
+        x0,y0,x1,y1=getCellBounds(app, row, col)
+        x=(x0+x1)/2
+        y=(y0+y1)/2
+        return x,y
 
 
 
@@ -66,18 +70,19 @@ def gameMode_keyPressed(app, event):
     print(event.key)
     # if event.key == 'b':
     #     print("place monkey")
-    if event.key=='Space':
+    if event.key=='Space' and not app.inRound:
         print("populating")
-        populateBloons(app)
+        # populateBloons(app)
         app.inRound=True
-    if event.key=='p':
-        app.objects.append()
+        app.round+=1
+        app.bloons=app.round+10
+    # if event.key=='p':
+    #     app.objects.append()
     if event.key=="Escape":
         app.mode="pausedMode"
-    # if event.key=='r':
-        # appStarted(app)
+    if event.key=='r':
+        restart(app)
         # restart round
-        
         
         
     # ! debugging
@@ -91,6 +96,31 @@ def gameMode_keyPressed(app, event):
         for i in app.objects:
             if isinstance(i,Towers):
                 i.changeTargeting('first')
+
+def restart(app):
+    # * game info
+    app.mode = 'splashScreenMode'
+    app.time = 0
+    app.timerDelay = 100
+    
+    # app.board=getBoard()
+    app.rows=len(app.board)
+    app.cols=len(app.board[0])
+    app.margin=10   
+    
+    app.inRound=False
+    app.round=0
+    app.win=False
+    app.health=0
+    
+    app.bloons=0
+    
+    app.objects=[]
+    app.bloonsList=[]
+    app.towersList=[]
+    # app.projectilesList=[]
+        
+        
 
 # * will if towers can/cant be placed at mouse location
 def gameMode_mouseMoved(app, event):
@@ -125,9 +155,14 @@ def isTowerLegal(app, row, col):
     return True
 
 def gameMode_timerFired(app):
+    if app.round==10:
+        app.win=True
+    if app.win:
+        return
     app.time+=app.timerDelay
     # app.objects=app.projectilesList+app.towersList+app.bloonsList
-    if app.bloonsList==[]:
+    # if app.bloonsList==[]:
+    if app.bloons==0 and app.bloonsList==[]:
         app.inRound=False
         # print("not in round")
     # if not typeExists(app, Bloons):
@@ -136,6 +171,13 @@ def gameMode_timerFired(app):
     # print(app.bloonsList)
     
     if app.inRound:
+        
+        if app.bloons>0:
+            if app.time%1000==0:
+                app.bloonsList.append(Bloons(app,(0,0),1))
+                app.bloons-=1
+                
+        
         res=[]
         for bloon in app.bloonsList:
             if not bloon.update():
@@ -163,10 +205,13 @@ def typeExists(app, type):
 # * fills bloon list
 # TODO stagger spawns
 def populateBloons(app):
-    app.round=-9
-    for i in range(app.round+10):
-        app.bloonsList.append(Bloons(app,(0,0),1))
+    # app.round=-9
+    # for i in range(app.round+10):
+    #     app.bloonsList.append(Bloons(app,(0,0),1))
         # app.objects.append(Bloons(app,(0,0),1))
+    
+    if app.time%10:
+        app.bloonsList.append(Bloons(app,(0,0),1))
         
 
 
@@ -196,12 +241,23 @@ def drawObjects(app, canvas):
     for obj in objects:
         obj.redraw(canvas)
 
-def drawHealth(app, canvas):
-    pass
+def drawInfo(app, canvas):
+    canvas.create_text(0,0,anchor='nw',text=f"Health: {app.health}", font="Comic\ Sans\ MS\ 30\ Bold")
+    canvas.create_text(app.width,0,anchor='ne',text=f"Round: {app.round}", font="Comic\ Sans\ MS\ 30\ Bold")
+    if not app.inRound:
+        canvas.create_text(app.width/2,0,anchor='n',text="Press space to start round!", font="Comic\ Sans\ MS\ 40\ Bold")
+    
+def drawWin(app, canvas):
+    if not app.win:
+        return
+    canvas.create_rectangle(0,0,app.width,app.height,fill="black")
+    canvas.create_text(app.width/2,app.height/2,fill="yellow",text="You win!", font="Comic\ Sans\ MS\ 50\ Bold")
+    
 
 # * draw the board
 def gameMode_redrawAll(app, canvas):
     drawBoard(app, canvas)
     drawObjects(app, canvas)
-    drawHealth(app, canvas)
+    drawInfo(app, canvas)
+    drawWin(app, canvas)
 

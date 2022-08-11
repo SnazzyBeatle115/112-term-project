@@ -18,7 +18,7 @@ class Projectile:
         self.path.pop(0)
 
     def update(self):
-        if self.app.time%(self.speed*50)==0: 
+        if self.app.time%(self.speed*10)==0: 
             self.move()
             # print("projectile moving")
             # print(self.pos)

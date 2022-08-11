@@ -22,3 +22,8 @@ to check bloon and dart collision: use distance formula
 
 Version Control Plan:
 GitHub
+
+
+
+TP2 Update
+No design changes
