@@ -1,5 +1,6 @@
+from cmu_112_graphics import *
 from Projectile import *
-from gameMode import getCellBounds,parseDataString
+from gameMode import getCellBounds,parseDataString,getCenter
 from Bloons import *
 import math
 
@@ -17,16 +18,27 @@ class Towers:
         self.setType(type)
         # * 0 = hovering, 1 = placed
         # self.state=0
-        self.rotation=math.pi*3/2
+        self.rotation=math.pi/2
         self.r=25
-        self.range=250
+        self.range=300
         self.targeting='first'
+    
+   
+        row,col=pos
+        self.absPos=getCenter(self.app,row,col)
+
+        self.loadImage()
         
-        row,col=self.pos
-        x0,y0,x1,y1=getCellBounds(app, row, col)
-        x=(x0+x1)/2
-        y=(y0+y1)/2
-        self.absPos=x,y
+    # * loads the sprite
+    def loadImage(self):
+        app=self.app
+        # * images: https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#imageMethods
+        # * transparency and rotation: https://pillow.readthedocs.io/en/stable/reference/Image.html
+
+        self.image=app.loadImage('Assets/monkey.png')
+        self.image.apply_transparency()
+        self.image=app.scaleImage(self.image,1/5)
+        
         
     # * sets the stats of towers in a dict
     def setType(self,type):
@@ -51,17 +63,24 @@ class Towers:
         
     # * fire projectile in a direction
     def fire(self):
-        print("fire")
+        # print("fire")
         targets=self.bloonsInRange()
         if len(targets)>0:
-            print("found target")
+            # print("found target")
             # print(self.absPos)
             if self.targeting=='closest':
                 target=self.findClosest(targets)
+                # print("closest:")
+                # print(target.pos,target.absPos)
+                # print(target)
             elif self.targeting=='first':
                 target=targets[0]
+            if target==None:
+                return
             self.rotate(target)
-            self.app.objects.append(Projectile(self.app,self.data['damage'],self.absPos,
+            if self.app.time%(500)==0:
+                # print("fired")
+                self.app.objects.append(Projectile(self.app,self.data['damage'],self.absPos,
                           self.getDirectionTarget(),1,25))
     
     # * gets the coordinates of the target direction
@@ -82,28 +101,39 @@ class Towers:
                 res.append(i)
         return res
     
+    # * finds closest bloon
     def findClosest(self,L):
         bestBloon=None
         min=self.range
         for i in L:
-            dist=math.dist(i.absPos,self.absPos)
+            dist=math.dist(i.setAbsPos(),self.absPos)
             if dist<min:
                 min=dist
                 bestBloon=i
         return bestBloon
     
-    # * https://docs.python.org/3/library/math.html#trigonometric-functions
+    # * atan2: https://docs.python.org/3/library/math.html#trigonometric-functions
     # * rotates to target direction
     def rotate(self, target):
         x,y=self.absPos
-        # tx,ty=target.absPos
+        tx,ty=target.setAbsPos()
 
         
         # temp=Bloons(self.app,target.getNextPos())
-        temp=Bloons(self.app,target.pos)
-        tx,ty=temp.absPos
-        print(f"target pos {target.pos,target.absPos}")
-        print(f"predicted pos {temp.pos,temp.absPos}")
+        
+        # temp=Bloons(self.app,target.pos)
+        # if self.targeting=="first":
+        #     tx,ty=temp.absPos
+        # tx,ty=temp.absPos
+        # if self.targeting=="closest":
+            # trow,tcol=temp.pos
+            # print(f"nextpos{trow,tcol}")
+            # tx,ty=getCenter(self.app,trow,tcol)
+            # tx,ty=target.absPos 
+        
+        
+        # print(f"target pos {target.pos,target.setAbsPos()}")
+        # print(f"predicted pos {temp.pos,temp.absPos}")
         
         
         xDist,yDist=tx-x,ty-y
@@ -113,7 +143,10 @@ class Towers:
         # elif yDist==0:
         #     theta=math.pi if xDist<0 else 0
         self.rotation=theta
-        
+        rotImg=-theta/math.pi*180-90
+        # print(rotImg)
+        self.loadImage()
+        self.image=self.image.rotate(rotImg)
         
         # print(f"bloons pos {tx,ty}")
         # print(f"self pos {x,y}")
@@ -123,14 +156,17 @@ class Towers:
     
     def update(self):
         # if self.app.time%(self.data["attack speed"]*100)==0:
-        if self.app.time%(500)==0:
-            self.fire()
+        # if self.app.time%(250)==0:
+        #     self.fire()
+        self.fire()
     
     def redraw(self, canvas):
         app=self.app
         x,y=self.absPos
-        canvas.create_oval(x-self.r,y-self.r,x+self.r,y+self.r,fill='saddle brown')
+        # canvas.create_oval(x-self.r,y-self.r,x+self.r,y+self.r,fill='saddle brown')
         canvas.create_oval(x-self.range,y-self.range,x+self.range,y+self.range,outline='gray',width=5,fill='')
+        
+        canvas.create_image(x, y, image=ImageTk.PhotoImage(self.image))
         
         canvas.create_text(x,y,text=self.targeting,font="Comic\ Sans\ MS\ 20\ Bold")
         # tx,ty=self.getDirectionTarget()
