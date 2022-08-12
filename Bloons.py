@@ -1,6 +1,6 @@
-from gameMode import getCellBounds,parseDataString,getCenter
+# from gameMode import getCellBounds,parseDataString,getCenter
+from functions import *
 from Projectile import *
-import math
 
 class Bloons:
     # * direction priority
@@ -32,19 +32,24 @@ class Bloons:
     def pop(self,dmg):
         self.type-=dmg
         if self.type<=0:
+            self.type=0
             # * play pop noise
+            print("Pop!")
+            self.app.bloonsPopped+=1
             return True
         self.setType(self.type)
         
     # * takes in a projectile and checks collision (for now just check if in same box)
     def checkCollision(self,other):
-        row,col=self.pos
+        # row,col=self.pos
         if not isinstance(other, Projectile):
+            # print("not proj")
             return
-        (x0, y0, x1, y1)=getCellBounds(self.app,row,col)
-        x,y=other.pos
+        # (x0, y0, x1, y1)=getCellBounds(self.app,row,col)
+        # x,y=other.pos
         # if x0<x<x1 and y0<y<y1:
-        if math.dist((x,y),self.pos)<self.r:
+        if math.dist(other.pos,self.absPos)<=self.r:
+            print(f"{math.dist(other.pos,self.pos)<=self.r} dist:{math.dist(other.pos,self.pos)}")
             return self.pop(other.damage)
             
     def checkAllProjectiles(self):
@@ -56,7 +61,12 @@ class Bloons:
                     return True
         return False
 
-            
+
+    
+    
+    
+      
+    
     
     # * go forward, if no path, try another direction, returns True if at 'e'
     def move(self):
@@ -64,14 +74,19 @@ class Bloons:
         row,col=self.pos
         dRow,dCol=self.dir
         nRow,nCol=row+dRow,col+dCol
-        if not isLegal((nRow,nCol),board):
+        if not isLegal((nRow,nCol),board): # * if hit a wall
+            x=Bloons.directions
+            random.shuffle(x) # * to avoid getting stuck
             for dRow,dCol in Bloons.directions:
                 nRow,nCol=row+dRow,col+dCol
                 if isLegal((nRow,nCol),board):
                     self.dir=(dRow,dCol)
                     break
         self.pos=nRow,nCol
-        return board[nRow][nCol]=="e"
+        if board[nRow][nCol]=="e":
+            self.app.health-=self.type
+            return True
+        return False
     
     # * gets next pos of bloon
     def getNextPos(self):
@@ -102,11 +117,12 @@ class Bloons:
             
     def update(self):
         self.setAbsPos()
+        x=self.checkAllProjectiles()
         # print(self.app.time,(self.data["spd"]*1000))
         if self.app.time%(self.data["spd"]*500)==0:
             return self.move()
         # TODO implement projectile collision
-        return self.checkAllProjectiles()
+        return x
         
         
         

@@ -1,9 +1,8 @@
 from cmu_112_graphics import *
 from Projectile import *
-from gameMode import getCellBounds,parseDataString,getCenter
+from functions import *
+# from gameMode import getCellBounds,parseDataString,getCenter
 from Bloons import *
-import math
-
 
 class Towers:
     
@@ -80,8 +79,8 @@ class Towers:
             self.rotate(target)
             if self.app.time%(500)==0:
                 # print("fired")
-                self.app.objects.append(Projectile(self.app,self.data['damage'],self.absPos,
-                          self.getDirectionTarget(),1,25))
+                self.app.objects.append(Projectile(self.app,self.data['damage'],self.data['pierce'],self.absPos,
+                          self.getDirectionTarget(),10,25))
     
     # * gets the coordinates of the target direction
     def getDirectionTarget(self):
