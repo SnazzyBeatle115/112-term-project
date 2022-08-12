@@ -139,6 +139,7 @@ def findPath(app):
         for drow,dcol in [(1,0),(0,1),(-1,0),(0,-1)]:
             row,col=node
             nrow,ncol=row+drow,col+dcol
+            x=coordToIndex
             if not (0<=nrow<app.rows and 0<=ncol<app.cols):
                 continue
             if (nrow,ncol) in visited:
@@ -153,7 +154,14 @@ def findPath(app):
     # return "no path"
 
 
+def coordToIndex(app, coord):
+    rows=app.rows
+    cols=app.cols
+    y,x=coord
+    return cols*y+x
 
+def indexToCoord(app, index):
+    return index%app.rows,index%app.cols
             
 
 # ! not used
