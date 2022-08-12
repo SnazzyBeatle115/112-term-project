@@ -18,6 +18,8 @@ def gameMode_keyPressed(app, event):
     if event.key=='Space' and not app.inRound:
         print("populating")
         # populateBloons(app)
+        app.towers=app.round//2+1
+        
         app.inRound=True
         app.round+=1
         app.bloons=app.round+10
@@ -29,8 +31,19 @@ def gameMode_keyPressed(app, event):
         restart(app)
         # restart round
         
+    if event.key=='c':
+        app.nextTower='closest'
+    if event.key=='f':
+        app.nextTower='first'
         
+        
+    if event.key=='`':
+        app.debug= not app.debug
     # ! debugging
+    if event.key=='w':
+        app.timerDelay*=10
+    if event.key=='s':
+        app.timerDelay//=10
     if event.key=='x':
         app.bloonsList.append(Bloons(app,(1,2),1))
     if event.key=='k':
@@ -50,7 +63,7 @@ def gameMode_mouseMoved(app, event):
 
 # * click to place a tower
 def gameMode_mousePressed(app, event):
-    print(event.x,event.y)
+    # print(event.x,event.y)
     row,col = getCell(app, event.x, event.y)
     placeTower(app, row, col)
 
@@ -59,6 +72,8 @@ def placeTower(app, row, col):
     tower = Towers(app,(row,col),1)
     isLegal = isTowerLegal(app,row,col)
     if isLegal==True: 
+        if app.towers==0:
+            return
         app.towers-=1
         app.towersPlaced+=1
         app.objects.append(tower)
@@ -80,19 +95,17 @@ def isTowerLegal(app, row, col):
     return True
 
 def gameMode_timerFired(app):
-    if app.round==10:
-        app.win=True
     if app.health<=0:
         app.lose=True
     if app.win or app.lose:
-        return
+        app.mode='gameOverMode'
     app.time+=app.timerDelay
     # app.objects=app.projectilesList+app.towersList+app.bloonsList
     # if app.bloonsList==[]:
     if app.bloons==0 and app.bloonsList==[]:
         app.inRound=False
-        app.towers=app.round//2+1
-        
+        if app.round==10:
+            app.win=True
         # print("not in round")
     # if not typeExists(app, Bloons):
     #     app.inRound=False
@@ -177,11 +190,17 @@ def drawBoard(app, canvas):
             if cell=="g":
                 fill='green'
             elif cell=='p':
-                fill='brown'
+                fill='LightGoldenrod4'
             elif cell=='e':
-                fill='yellow'
+                if app.debug:
+                    fill='yellow'
+                else:
+                    fill='LightGoldenrod4'
             elif cell=='s':
-                fill='chartreuse'
+                if app.debug:
+                    fill='chartreuse'
+                else:
+                    fill='LightGoldenrod4'
             canvas.create_rectangle(bounds,fill=fill)
             
     
@@ -195,20 +214,11 @@ def drawInfo(app, canvas):
     canvas.create_text(app.width,0,anchor='ne',text=f"Round: {app.round}", font="Comic\ Sans\ MS\ 30\ Bold")
     canvas.create_text(app.width,app.height,anchor='se',text=f"Towers Left: {app.towers}", font="Comic\ Sans\ MS\ 30\ Bold")
     canvas.create_text(0,app.height,anchor='sw',text=f"Bloons Left: {len(app.bloonsList)+app.bloons}", font="Comic\ Sans\ MS\ 30\ Bold")
+    canvas.create_text(app.width/2,app.height,fill="yellow",anchor='s',text=f"Target {app.nextTower}", font="Comic\ Sans\ MS\ 30\ Bold")
+    
     if not app.inRound:
         canvas.create_text(app.width/2,0,anchor='n',text="Press space to start round!", font="Comic\ Sans\ MS\ 40\ Bold")
     
-def drawGameOver(app, canvas):
-    canvas.create_rectangle(0,0,app.width,app.height,fill="black")
-    text="Game Over!"
-    if app.win:
-        text="You won!"
-    elif app.lose:
-        text="You lost!"
-    canvas.create_text(app.width/2,app.height/2,fill="yellow",text=text, font="Comic\ Sans\ MS\ 50\ Bold")
-    canvas.create_text(app.width,0,fill="yellow",anchor='ne',text=f"Round: {app.round}", font="Comic\ Sans\ MS\ 30\ Bold")
-    canvas.create_text(app.width,app.height,fill="yellow",anchor='se',text=f"Towers Placed: {app.towersPlaced}", font="Comic\ Sans\ MS\ 30\ Bold")
-    canvas.create_text(0,app.height,fill="yellow",anchor='sw',text=f"Bloons Popped: {app.bloonsPopped}", font="Comic\ Sans\ MS\ 30\ Bold")
 
 
 # * draw the board
@@ -216,6 +226,5 @@ def gameMode_redrawAll(app, canvas):
     drawBoard(app, canvas)
     drawObjects(app, canvas)
     drawInfo(app, canvas)
-    if app.win or app.lose: 
-        drawGameOver(app, canvas)
+   
 

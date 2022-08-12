@@ -1,3 +1,5 @@
+from functions import *
+
 class Projectile:
     
     def __init__(self, app, dmg, pierce, start, end, speed, size):
@@ -30,11 +32,35 @@ class Projectile:
         # self.pos=self.path[0]
         # self.path.pop(0)
 
+    # * takes in a bloon and checks collision 
+    def checkCollision(self, other):
+        # row,col=self.pos
+        if not isinstance(other, Projectile):
+            # print("not proj")
+            return
+        # (x0, y0, x1, y1)=getCellBounds(self.app,row,col)
+        # x,y=other.pos
+        # if x0<x<x1 and y0<y<y1:
+        if math.dist(other.absPos,self.pos)<=other.r:
+            print(f"{math.dist(other.pos,self.pos)<=self.r} dist:{math.dist(other.pos,self.pos)}")
+            return True
+            
+    def checkAllBloons(self):
+        app=self.app
+        for i in app.bloonsList:
+        
+            if self.checkCollision(i):
+                print("Pcollided")
+                return True
+        return False
+
+        
     def update(self):
         # if self.app.time%(self.speed)==0: 
             # self.move()
             # print("projectile moving")
             # print(self.pos)
+        self.checkAllBloons()
         self.move()
         x,y=self.pos
         # print(self.pos)

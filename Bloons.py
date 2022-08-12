@@ -5,10 +5,12 @@ from Projectile import *
 class Bloons:
     # * direction priority
     # directions=['e','s','n','w']
-    directions=[(1,0),(0,1),(0,-1),(-1,0)]
+    # directions=[(1,0),(0,1),(0,-1),(-1,0)]
+    
     
     # * spd, color
-    bloonsData=["spd,color","1,red","1.4,blue"]
+    bloonsData=["spd,color,img","1,red,Assets/redbloon.png",
+                "1.4,blue,Assets/bluebloon.png"]
     
     def __init__(self,app,pos,type=1,dir=(1,0)):
         self.app=app
@@ -20,12 +22,19 @@ class Bloons:
         self.r=25
         
         self.setAbsPos()
+        self.path=copy.copy(app.path)
+        
+        
 
 
     # * sets the stats of bloons in a dict
     def setType(self,type):
         data=parseDataString(Bloons.bloonsData,type)
         self.data=data
+        
+        self.img=data['img']
+        loadImage(self,self.img,1/2)
+        
         # * change sprite
     
     # * whenever a bloon is hit
@@ -68,39 +77,39 @@ class Bloons:
       
     
     
-    # * go forward, if no path, try another direction, returns True if at 'e'
-    def move(self):
-        board=self.app.board
-        row,col=self.pos
-        dRow,dCol=self.dir
-        nRow,nCol=row+dRow,col+dCol
-        if not isLegal((nRow,nCol),board): # * if hit a wall
-            x=Bloons.directions
-            random.shuffle(x) # * to avoid getting stuck
-            for dRow,dCol in Bloons.directions:
-                nRow,nCol=row+dRow,col+dCol
-                if isLegal((nRow,nCol),board):
-                    self.dir=(dRow,dCol)
-                    break
-        self.pos=nRow,nCol
-        if board[nRow][nCol]=="e":
-            self.app.health-=self.type
-            return True
-        return False
+    # # * go forward, if no path, try another direction, returns True if at 'e'
+    # def move(self):
+    #     board=self.app.board
+    #     row,col=self.pos
+    #     dRow,dCol=self.dir
+    #     nRow,nCol=row+dRow,col+dCol
+    #     if not isLegal((nRow,nCol),board): # * if hit a wall
+    #         x=Bloons.directions
+    #         random.shuffle(x) # * to avoid getting stuck
+    #         for dRow,dCol in Bloons.directions:
+    #             nRow,nCol=row+dRow,col+dCol
+    #             if isLegal((nRow,nCol),board):
+    #                 self.dir=(dRow,dCol)
+    #                 break
+    #     self.pos=nRow,nCol
+    #     if board[nRow][nCol]=="e":
+    #         self.app.health-=self.type
+    #         return True
+    #     return False
     
-    # * gets next pos of bloon
-    def getNextPos(self):
-        board=self.app.board
-        row,col=self.pos
-        dRow,dCol=self.dir
-        nRow,nCol=row+dRow,col+dCol
-        if not isLegal((nRow,nCol),board):
-            for dRow,dCol in Bloons.directions:
-                nRow,nCol=row+dRow,col+dCol
-                if isLegal((nRow,nCol),board):
-                    # self.dir=(dRow,dCol)
-                    break
-        return nRow,nCol
+    # # * gets next pos of bloon
+    # def getNextPos(self):
+        # board=self.app.board
+        # row,col=self.pos
+        # dRow,dCol=self.dir
+        # nRow,nCol=row+dRow,col+dCol
+        # if not isLegal((nRow,nCol),board):
+        #     for dRow,dCol in Bloons.directions:
+        #         nRow,nCol=row+dRow,col+dCol
+        #         if isLegal((nRow,nCol),board):
+        #             # self.dir=(dRow,dCol)
+        #             break
+        # return nRow,nCol
     
     # * sets the absPos of bloon
     def setAbsPos(self):
@@ -113,8 +122,20 @@ class Bloons:
         self.setAbsPos()
         x,y=self.absPos
         # print(f"bloons pos {self.absPos}")
-        canvas.create_oval(x-self.r,y-self.r,x+self.r,y+self.r,fill=self.data['color'])
+        # canvas.create_oval(x-self.r,y-self.r,x+self.r,y+self.r,fill=self.data['color'])
+        canvas.create_image(x, y, image=ImageTk.PhotoImage(self.image))
             
+            
+    def move(self):
+        self.pos=self.path.pop(0)
+        row,col=self.pos
+        if self.app.board[row][col]=="e":
+            self.app.health-=self.type
+            return True
+        return False
+    
+ 
+    
     def update(self):
         self.setAbsPos()
         x=self.checkAllProjectiles()

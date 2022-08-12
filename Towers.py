@@ -1,4 +1,3 @@
-from cmu_112_graphics import *
 from Projectile import *
 from functions import *
 # from gameMode import getCellBounds,parseDataString,getCenter
@@ -19,24 +18,16 @@ class Towers:
         # self.state=0
         self.rotation=math.pi/2
         self.r=25
-        self.range=300
-        self.targeting='first'
+        self.range=100
+        self.targeting=app.nextTower
     
    
         row,col=pos
         self.absPos=getCenter(self.app,row,col)
-
-        self.loadImage()
+        self.path='Assets/monkey.png'
+        loadImage(self,self.path,1/5)
         
-    # * loads the sprite
-    def loadImage(self):
-        app=self.app
-        # * images: https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#imageMethods
-        # * transparency and rotation: https://pillow.readthedocs.io/en/stable/reference/Image.html
-
-        self.image=app.loadImage('Assets/monkey.png')
-        self.image.apply_transparency()
-        self.image=app.scaleImage(self.image,1/5)
+    
         
         
     # * sets the stats of towers in a dict
@@ -80,7 +71,7 @@ class Towers:
             if self.app.time%(500)==0:
                 # print("fired")
                 self.app.objects.append(Projectile(self.app,self.data['damage'],self.data['pierce'],self.absPos,
-                          self.getDirectionTarget(),10,25))
+                          self.getDirectionTarget(),10,10))
     
     # * gets the coordinates of the target direction
     def getDirectionTarget(self):
@@ -144,7 +135,7 @@ class Towers:
         self.rotation=theta
         rotImg=-theta/math.pi*180-90
         # print(rotImg)
-        self.loadImage()
+        loadImage(self, self.path, 1/5)
         self.image=self.image.rotate(rotImg)
         
         # print(f"bloons pos {tx,ty}")

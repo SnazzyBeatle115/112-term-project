@@ -1,5 +1,7 @@
+from cmu_112_graphics import *
 import random
 import math
+import copy
 
 def restart(app):
     # * game info
@@ -16,8 +18,13 @@ def restart(app):
     app.board=getMaze(app,10,10)
     app.rows=len(app.board)
     app.cols=len(app.board[0])
-    
-    print(findPath(app))
+
+    x=findPath(app)
+    while x == None:
+        app.board=getMaze(app,10,10)
+        x=findPath(app)
+        
+    app.path=x
     
     app.margin=10   
     
@@ -25,10 +32,12 @@ def restart(app):
     app.round=0
     app.win=False
     app.lose=False
+    app.debug=False
     app.health=20
     
     app.bloons=0
     app.towers=app.round
+    app.nextTower='first'
     
     app.bloonsPopped=0
     app.towersPlaced=0
@@ -86,26 +95,26 @@ def genMaze(app, cell, visited):
     
 def getNodes(app):
     board=app.board
-    nodes=[coordToIndex(app,app.startPos)]
+    nodes=[app.startPos]
     for i in range(len(board)):
         for j in range(len(board[i])):
             if board[i][j]=="p":
-                nodes.append(coordToIndex(app,(i,j)))
-                print(coordToIndex(app,(i,j)))
+                nodes.append((i,j))
     return nodes
     
 
 # * BFS: https://www.cs.cmu.edu/~112/notes/student-tp-guides/Pathfinding.pdf
 def findPath(app):
-    queue=getNodes(app)
-    visited={coordToIndex(app,app.startPos)}
+    queue=[app.startPos]
+    visited={app.startPos}
     map={}
     # print(app.startPos)
     # for _ in app.board: print(_)
-    # print(queue)
+    # print()
     while queue != []:
         node=queue.pop(0)
-        
+
+
         # i,j=node
         # print(app.board[i][j])
         # if app.board[i][j]=="e" or (i,j)==(4,0) or i==4 and j==0:
@@ -114,12 +123,12 @@ def findPath(app):
             
             
             
-        if node == coordToIndex(app,app.endPos): # * if node is target
+        if node == app.endPos: # * if node is target
             print("found end")
             path=[node]
             cur=node
-            print(f"visited:\n{visited}")
-            print(f"map:\n{map}")
+            # print(f"visited:\n{visited}")
+            # print(f"map:\n{map}")
             i=0
             while True:
                 # print(cur)
@@ -128,41 +137,32 @@ def findPath(app):
                 if cur==app.startPos:
                     break
                 i+=1
-                if i>100:
+                if i>app.rows*app.cols:
                     print("broke")
-                    break
+                    return None
             print("DONE")
             path.reverse()
             return path
         
         # * for each neighbor
         for drow,dcol in [(1,0),(0,1),(-1,0),(0,-1)]:
-            row,col=indexToCoord(app, node)
+            row,col=node
             nrow,ncol=row+drow,col+dcol
-            x=coordToIndex(app, (nrow,ncol))
             if not (0<=nrow<app.rows and 0<=ncol<app.cols):
                 continue
-            if (x) in visited:
+            if (nrow,ncol) in visited:
                 continue
             if app.board[nrow][ncol]!="p" and app.board[nrow][ncol]!='e':
                 continue
-            visited.add(x)
-            queue.append(x)
-            map[x]=node
+            visited.add((nrow,ncol))
+            queue.append((nrow,ncol))
+            map[(nrow,ncol)]=node
     # print(visited)
     # print(map)
     # return "no path"
 
 
-def coordToIndex(app, coord):
-    rows=app.rows
-    cols=app.cols
-    y,x=coord
-    return cols*y+x
 
-def indexToCoord(app, index):
-    # print(index)
-    return index%app.rows,index%app.cols
             
 
 # ! not used
@@ -276,6 +276,17 @@ def parseDataString(data,idx):
             stat=eval(stat)
         d[data[0].split(',')[i]]=stat
     return d
+
+# * loads the sprite
+def loadImage(self,path,scale):
+    app=self.app
+    # * images: https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#imageMethods
+    # * transparency and rotation: https://pillow.readthedocs.io/en/stable/reference/Image.html
+
+    self.image=app.loadImage(path)
+    self.image.apply_transparency()
+    self.image=app.scaleImage(self.image,scale)
+
 
 # * from https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
 def pointInGrid(app, x, y):
