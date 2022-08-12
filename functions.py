@@ -86,26 +86,26 @@ def genMaze(app, cell, visited):
     
 def getNodes(app):
     board=app.board
-    nodes=[app.startPos]
+    nodes=[coordToIndex(app,app.startPos)]
     for i in range(len(board)):
         for j in range(len(board[i])):
             if board[i][j]=="p":
-                nodes.append((i,j))
+                nodes.append(coordToIndex(app,(i,j)))
+                print(coordToIndex(app,(i,j)))
     return nodes
     
 
 # * BFS: https://www.cs.cmu.edu/~112/notes/student-tp-guides/Pathfinding.pdf
 def findPath(app):
     queue=getNodes(app)
-    visited={app.startPos}
+    visited={coordToIndex(app,app.startPos)}
     map={}
     # print(app.startPos)
     # for _ in app.board: print(_)
-    # print()
+    # print(queue)
     while queue != []:
         node=queue.pop(0)
-
-
+        
         # i,j=node
         # print(app.board[i][j])
         # if app.board[i][j]=="e" or (i,j)==(4,0) or i==4 and j==0:
@@ -114,7 +114,7 @@ def findPath(app):
             
             
             
-        if node == app.endPos: # * if node is target
+        if node == coordToIndex(app,app.endPos): # * if node is target
             print("found end")
             path=[node]
             cur=node
@@ -137,18 +137,18 @@ def findPath(app):
         
         # * for each neighbor
         for drow,dcol in [(1,0),(0,1),(-1,0),(0,-1)]:
-            row,col=node
+            row,col=indexToCoord(app, node)
             nrow,ncol=row+drow,col+dcol
-            x=coordToIndex
+            x=coordToIndex(app, (nrow,ncol))
             if not (0<=nrow<app.rows and 0<=ncol<app.cols):
                 continue
-            if (nrow,ncol) in visited:
+            if (x) in visited:
                 continue
             if app.board[nrow][ncol]!="p" and app.board[nrow][ncol]!='e':
                 continue
-            visited.add((nrow,ncol))
-            queue.append((nrow,ncol))
-            map[(nrow,ncol)]=node
+            visited.add(x)
+            queue.append(x)
+            map[x]=node
     # print(visited)
     # print(map)
     # return "no path"
@@ -161,6 +161,7 @@ def coordToIndex(app, coord):
     return cols*y+x
 
 def indexToCoord(app, index):
+    # print(index)
     return index%app.rows,index%app.cols
             
 

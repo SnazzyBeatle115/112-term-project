@@ -1,70 +1,15 @@
 ###########
 # Game Mode
 ###########
-# from Main import appStarted
 
 
-
-# * returns a dictionary of the data using first row as the keys
-def parseDataString(data,idx):
-    d={}
-    splitData=data[idx].split(',')
-    for i in range(len(splitData)):
-        stat=splitData[i]
-        if stat[0].isdigit():
-            stat=eval(stat)
-        d[data[0].split(',')[i]]=stat
-    return d
-
-# * from https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
-def pointInGrid(app, x, y):
-    # return True if (x, y) is inside the grid defined by app.
-    return ((app.margin <= x <= app.width-app.margin) and
-            (app.margin <= y <= app.height-app.margin))
-    
-def getCell(app, x, y):
-    # aka "viewToModel"
-    # return (row, col) in which (x, y) occurred or (-1, -1) if outside grid.
-    if (not pointInGrid(app, x, y)):
-        return (-1, -1)
-    gridWidth  = app.width - 2*app.margin
-    gridHeight = app.height - 2*app.margin
-    cellWidth  = gridWidth / app.cols
-    cellHeight = gridHeight / app.rows
-
-    # Note: we have to use int() here and not just // because
-    # row and col cannot be floats and if any of x, y, app.margin,
-    # cellWidth or cellHeight are floats, // would still produce floats.
-    row = int((y - app.margin) / cellHeight)
-    col = int((x - app.margin) / cellWidth)
-
-    return (row, col)
-
-def getCellBounds(app, row, col):
-    # aka "modelToView"
-    # returns (x0, y0, x1, y1) corners/bounding box of given cell in grid
-    gridWidth  = app.width - 2*app.margin
-    gridHeight = app.height - 2*app.margin
-    cellWidth = gridWidth / app.cols
-    cellHeight = gridHeight / app.rows
-    x0 = app.margin + col * cellWidth
-    x1 = app.margin + (col+1) * cellWidth
-    y0 = app.margin + row * cellHeight
-    y1 = app.margin + (row+1) * cellHeight
-    return (x0, y0, x1, y1)
-
-# * gets the coords of center of cell
-def getCenter(app,row,col):
-        x0,y0,x1,y1=getCellBounds(app, row, col)
-        x=(x0+x1)/2
-        y=(y0+y1)/2
-        return x,y
-
-
-
+from functions import *
 from Bloons import *
 from Towers import *
 from Projectile import *
+
+
+
 
 def gameMode_keyPressed(app, event):
     print(event.key)
@@ -97,29 +42,6 @@ def gameMode_keyPressed(app, event):
             if isinstance(i,Towers):
                 i.changeTargeting('first')
 
-def restart(app):
-    # * game info
-    app.mode = 'splashScreenMode'
-    app.time = 0
-    app.timerDelay = 100
-    
-    # app.board=getBoard()
-    app.rows=len(app.board)
-    app.cols=len(app.board[0])
-    app.margin=10   
-    
-    app.inRound=False
-    app.round=0
-    app.win=False
-    app.health=0
-    
-    app.bloons=0
-    
-    app.objects=[]
-    app.bloonsList=[]
-    app.towersList=[]
-    # app.projectilesList=[]
-        
         
 
 # * will if towers can/cant be placed at mouse location
@@ -137,9 +59,12 @@ def placeTower(app, row, col):
     tower = Towers(app,(row,col),1)
     isLegal = isTowerLegal(app,row,col)
     if isLegal==True: 
+        app.towers-=1
+        app.towersPlaced+=1
         app.objects.append(tower)
         print("placed")
     elif isLegal:
+        app.towers+=1
         app.objects.remove(isLegal)
         print("removed")
     
@@ -157,13 +82,17 @@ def isTowerLegal(app, row, col):
 def gameMode_timerFired(app):
     if app.round==10:
         app.win=True
-    if app.win:
+    if app.health<=0:
+        app.lose=True
+    if app.win or app.lose:
         return
     app.time+=app.timerDelay
     # app.objects=app.projectilesList+app.towersList+app.bloonsList
     # if app.bloonsList==[]:
     if app.bloons==0 and app.bloonsList==[]:
         app.inRound=False
+        app.towers=app.round//2+1
+        
         # print("not in round")
     # if not typeExists(app, Bloons):
     #     app.inRound=False
@@ -171,18 +100,32 @@ def gameMode_timerFired(app):
     # print(app.bloonsList)
     
     if app.inRound:
-        
+
+        # * place bloons
         if app.bloons>0:
             if app.time%1000==0:
-                app.bloonsList.append(Bloons(app,(0,0),1))
-                app.bloons-=1
+                if app.round>4:
+                    if app.time%2000==0:
+                        app.bloonsList.append(Bloons(app,app.startPos,2))
+                        app.bloons-=1
+                    else:
+                        app.bloonsList.append(Bloons(app,app.startPos,1))
+                        app.bloons-=1
+                else:
+                    app.bloonsList.append(Bloons(app,app.startPos,1))
+                    app.bloons-=1
+                        
                 
+  
         
+        # * remove bloons if popped or reach end
         res=[]
         for bloon in app.bloonsList:
             if not bloon.update():
                 # print("moved")
                 res.append(bloon)
+            else:
+                print("removing")
         app.bloonsList=res
         
     res=[]
@@ -204,14 +147,20 @@ def typeExists(app, type):
     
 # * fills bloon list
 # TODO stagger spawns
+
+# ! not used
 def populateBloons(app):
     # app.round=-9
     # for i in range(app.round+10):
     #     app.bloonsList.append(Bloons(app,(0,0),1))
         # app.objects.append(Bloons(app,(0,0),1))
-    
+    print("meow")
     if app.time%10:
-        app.bloonsList.append(Bloons(app,(0,0),1))
+        print(app.startPos)
+        app.bloonsList.append(Bloons(app,app.startPos,1))
+        if app.round>5 and app.time%15:
+            app.bloonsList.append(Bloons(app,app.startPos,2))
+
         
 
 
@@ -244,20 +193,29 @@ def drawObjects(app, canvas):
 def drawInfo(app, canvas):
     canvas.create_text(0,0,anchor='nw',text=f"Health: {app.health}", font="Comic\ Sans\ MS\ 30\ Bold")
     canvas.create_text(app.width,0,anchor='ne',text=f"Round: {app.round}", font="Comic\ Sans\ MS\ 30\ Bold")
+    canvas.create_text(app.width,app.height,anchor='se',text=f"Towers Left: {app.towers}", font="Comic\ Sans\ MS\ 30\ Bold")
+    canvas.create_text(0,app.height,anchor='sw',text=f"Bloons Left: {len(app.bloonsList)+app.bloons}", font="Comic\ Sans\ MS\ 30\ Bold")
     if not app.inRound:
         canvas.create_text(app.width/2,0,anchor='n',text="Press space to start round!", font="Comic\ Sans\ MS\ 40\ Bold")
     
-def drawWin(app, canvas):
-    if not app.win:
-        return
+def drawGameOver(app, canvas):
     canvas.create_rectangle(0,0,app.width,app.height,fill="black")
-    canvas.create_text(app.width/2,app.height/2,fill="yellow",text="You win!", font="Comic\ Sans\ MS\ 50\ Bold")
-    
+    text="Game Over!"
+    if app.win:
+        text="You won!"
+    elif app.lose:
+        text="You lost!"
+    canvas.create_text(app.width/2,app.height/2,fill="yellow",text=text, font="Comic\ Sans\ MS\ 50\ Bold")
+    canvas.create_text(app.width,0,fill="yellow",anchor='ne',text=f"Round: {app.round}", font="Comic\ Sans\ MS\ 30\ Bold")
+    canvas.create_text(app.width,app.height,fill="yellow",anchor='se',text=f"Towers Placed: {app.towersPlaced}", font="Comic\ Sans\ MS\ 30\ Bold")
+    canvas.create_text(0,app.height,fill="yellow",anchor='sw',text=f"Bloons Popped: {app.bloonsPopped}", font="Comic\ Sans\ MS\ 30\ Bold")
+
 
 # * draw the board
 def gameMode_redrawAll(app, canvas):
     drawBoard(app, canvas)
     drawObjects(app, canvas)
     drawInfo(app, canvas)
-    drawWin(app, canvas)
+    if app.win or app.lose: 
+        drawGameOver(app, canvas)
 

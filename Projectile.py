@@ -1,8 +1,9 @@
 class Projectile:
     
-    def __init__(self, app, dmg, start, end, speed, size):
+    def __init__(self, app, dmg, pierce, start, end, speed, size):
         self.app=app
         self.damage=dmg
+        self.hp=pierce
         self.start=start
         self.end=end
         self.speed=speed
@@ -12,16 +13,29 @@ class Projectile:
     
         
     def move(self):
-        if len(self.path)==0:
-            return
-        self.pos=self.path[0]
-        self.path.pop(0)
+        x,y=self.pos
+        tx,ty=self.end
+        if (x,y)==(tx,ty):
+            return True
+        
+        xDist,yDist=tx-x,ty-y
+        
+        x+=xDist/self.speed
+        y+=yDist/self.speed
+
+        self.pos=x,y
+        
+        # if len(self.path)==0:
+        #     return
+        # self.pos=self.path[0]
+        # self.path.pop(0)
 
     def update(self):
-        if self.app.time%(self.speed*10)==0: 
-            self.move()
+        # if self.app.time%(self.speed)==0: 
+            # self.move()
             # print("projectile moving")
             # print(self.pos)
+        self.move()
         x,y=self.pos
         # print(self.pos)
         if 0>x>self.app.width or 0>y>self.app.height or self.app.inRound==False:
